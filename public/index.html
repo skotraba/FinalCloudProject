@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag and Drop List</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://kit.fontawesome.com/d005c18257.js" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+  --border-color: #e3e5e4;
+  --background-color: #d8d9da;
+  --highlight-color: #0fa0aa;
+}
+
+body {
+  background-color: #3f484e;
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  color: whitesmoke;
+
+}
+
+*{
+  box-sizing: border-box;
+}
+
+.dragList {
+  border: 1px var(--border-color) solid;
+  color: #34444f;
+  padding: 0;
+  list-style-type: none;
+  box-shadow: 5px -1px 57px -4px rgba(0,0,0,0.65);
+  -webkit-box-shadow: 5px -1px 57px -4px rgba(0,0,0,0.65);
+  -moz-box-shadow: 5px -1px 57px -4px rgba(0,0,0,0.65);
+}
+
+.dragList li {
+  background-color: #fff;
+  display: flex;
+  flex: 1;
+  width: 20vw;
+}
+
+.dragList li:not(:last-of-type){
+  border-bottom: 1px solid var(--background-color);
+}
+
+.dragList .number {
+  background-color: var(--background-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  /* height: 60px;
+  width: 60px; */
+  width: 5vw;
+  border: 1px solid white;
+}
+
+.dragList li.over .draggable {
+  background-color: #c4c3c3;
+}
+
+.dragList .item-name {
+  margin: 0 20px 0 0;
+}
+
+
+.dragList li.right .draggable {
+  background-color: rgba(15, 169, 22, 0.3);
+}
+
+.dragList li.wrong .draggable {
+  background-color: rgba(241, 42, 42, 0.3);;
+}
+
+
+.draggable {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  flex: 1;
+}
+
+.btn-check {
+  background-color: var(--background-color);
+  border: none;
+  color: #34444f;
+  font: 20px;
+  font-weight: bolder;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin: 1rem;
+}
+
+.btn-check:active {
+  transform: scale(0.98);
+}
+
+.btn-check:focus {
+  outline: #0fa0aa 2px solid;
+}
+
+.btn-check:disabled{
+  background-color: #666768;
+  cursor: not-allowed;
+}
+
+.finish {
+  color: greenyellow;
+}
+  </style>
+</head>
+<body>
+
+  <h1>Drag and Drop List For OpenShift Deployment</h1>
+  <p id="display">Drag and Drop items into their correct order</p>
+  <ul class="dragList" id="dragList"></ul>
+  <div>
+    <button class="btn-check" id="check" onclick="checkOrder()">Check Order</button>
+    <button disabled class="btn-check" id="finish" onclick="window.location.reload()">Play Again</button>
+  </div>
+
+  <script>
+    
+
+const dragList = document.getElementById("dragList");
+const check = document.getElementById("check");
+const display = document.getElementById("display");
+
+//Items in correct order
+const list = [
+  "Download .exe file and Pull Secret",
+  "Add OpenShift to $Path",
+  "Type \"crc setup in Command Prompt\"",
+  "Type \"crc start\"",
+ 
+];
+
+const listItems = [];
+let startIndex;
+
+createList();
+
+//Insert List items
+function createList() {
+
+ [...list]
+ .map(a => ({value: a, sort: Math.random()}))
+ .sort((a, b) => a.sort - b.sort)
+ .map(a => a.value)
+ .forEach((item, index) => {
+   let listItem = document.createElement("li");
+
+   listItem.setAttribute("data-index", index);
+
+
+   listItem.innerHTML = 
+  ` <span class="number">${index + 1}</span>
+    <div class="draggable" draggable="true">
+      <p class="item-name">${item}</p>
+      <i class="fas fa-grip-lines"></i>
+    </div>`
+
+   listItems.push(listItem);
+
+   dragList.appendChild(listItem)
+ });
+
+ addEventListener();
+}
+
+// Utility swap function for drag and drop
+function swapItems(start, end) {
+  const itemOne = listItems[start].querySelector('.draggable');
+  const itemTwo = listItems[end].querySelector('.draggable');
+  
+  listItems[start].appendChild(itemTwo);
+  listItems[end].appendChild(itemOne);
+
+}
+
+// Get the index for the grabbed item
+function dragStart() {
+  // console.log("dragStart")
+  startIndex = this.closest('li').getAttribute('data-index');
+}
+
+// Function that happens when dragging
+function dragOver(e) {
+  e.preventDefault();
+  // console.log("dragOver")
+}
+
+function dragDrop() {
+  // console.log("dragDrop")
+  const endIndex = this.getAttribute('data-index');
+  swapItems(startIndex, endIndex);
+
+  this.classList.remove("over");
+}
+
+function dragEnter() {
+  // console.log("dragEnter")
+  this.classList.add('over');
+}
+
+function dragLeave() {
+  // console.log("dragLeave")
+  this.classList.remove('over');
+}
+
+function addEventListener() {
+  const draggables = document.querySelectorAll('.draggable');
+  const dragListItems = document.querySelectorAll('.dragList li');
+
+  draggables.forEach(draggable => {
+    draggable.addEventListener('dragstart', dragStart)
+  });
+
+  dragListItems.forEach(item => {
+    item.addEventListener('dragover', dragOver);
+    item.addEventListener('drop', dragDrop);
+    item.addEventListener('dragenter', dragEnter);
+    item.addEventListener('dragleave', dragLeave);
+  });
+
+
+}
+
+function checkOrder(){
+  listItems.forEach((listItem, index) => {
+    const item = listItem.querySelector('.draggable').innerText.trim();
+
+    if(item !== list[index]) {
+      listItem.classList.add('wrong')
+    }
+    else {
+      listItem.classList.remove('wrong');
+      listItem.classList.add('right');
+      
+    }
+
+  })
+
+  checkCompleteList();
+}
+
+
+// check.addEventListener('click', checkOrder);
+
+function checkCompleteList() {
+  const n = list.length;
+  let count = 0;
+
+  let correct = document.querySelectorAll('.right');
+  console.log(correct, n)
+  if(correct.length === n){
+    display.innerHTML = "Congratulations! You Completed the list!"
+    display.classList.add("finish");
+    finish();
+  }
+}
+
+function finish() {
+  let finish = document.getElementById("finish");
+  finish.removeAttribute("disabled")
+}
+  </script>
+</body>
+</html>
